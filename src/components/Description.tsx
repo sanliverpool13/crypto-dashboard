@@ -1,5 +1,3 @@
-import React from "react";
-
 const Description = () => {
   return (
     <div className="flex flex-col lg:gap-8 gap-4 lg:flex-grow">
