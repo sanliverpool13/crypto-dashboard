@@ -1,0 +1,4 @@
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" fill="#000000" rx="25" ry="25"/>
+  <text x="50%" y="50%" fill="#ffffff" font-family="Arial" font-size="64" text-anchor="middle" alignment-baseline="central">OB</text>
+</svg>
