@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useBinanceData } from "../hooks/useBinanceData";
 import { PriceLevel } from "../types/binance";
-import { BTCUSDT } from "../utils/constants";
+import { BTCUSDT, SymbolMap } from "../utils/constants";
 
 const OrderBook = () => {
-  const data = useBinanceData(BTCUSDT);
+  const symbol = BTCUSDT;
+  const coin = SymbolMap[BTCUSDT].first.toUpperCase();
+  const quote = SymbolMap[BTCUSDT].second.toUpperCase();
+
+  const data = useBinanceData(symbol);
   const [lastPriceDirection, setLastPriceDirection] = useState<string | null>(
     null,
   ); // 'up' or 'down'
@@ -33,12 +37,12 @@ const OrderBook = () => {
   return (
     <div className="w-full flex items-center lg:justify-center justify-start lg:flex-grow ">
       <div className=" lg:w-[500px] sm:w-4/5 w-full bg-white rounded-lg lg:p-4 p-2 border border-1 border-grey">
-        <table className="w-full">
+        <table className="w-full table-fixed">
           <thead>
             <tr className="text-sm text-gray-600">
-              <th className="text-left pb-4">Price (USDT)</th>
-              <th className="text-right pb-4">Amount (AVAX)</th>
-              <th className="text-right pb-4">Total (USDT)</th>
+              <th className="text-left pb-4">Price ({quote})</th>
+              <th className="text-right pb-4">Amount ({coin})</th>
+              <th className="text-right pb-4">Total ({quote})</th>
             </tr>
           </thead>
           <tbody>
