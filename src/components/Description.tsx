@@ -25,8 +25,8 @@ const Description = () => {
       <div className="flex flex-col gap-2">
         <h2 className="text-gray-500 font-semibold">Description</h2>
         <p>
-          This is an order book that displays the buy and sell orders for a
-          given trading pair.
+          A simple order book that displays the buy and sell orders for a given
+          trading pair.
         </p>
         <p>
           The last traded price (current price) is in the middle of the table.
