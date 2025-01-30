@@ -1,14 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import { useBinanceData } from "../hooks/useBinanceData";
-import { PriceLevel } from "../types/binance";
-import { BTCUSDT, SymbolMap } from "../utils/constants";
+import { PriceLevel, Symbol } from "../types/binance";
+import { SymbolMap } from "../utils/constants";
 
-const OrderBook = () => {
-  const symbol = BTCUSDT;
-  const coin = SymbolMap[BTCUSDT].first.toUpperCase();
-  const quote = SymbolMap[BTCUSDT].second.toUpperCase();
+interface OrderBookProps {
+  data: {
+    orderBook: {
+      asks: PriceLevel[];
+      bids: PriceLevel[];
+    } | null;
+    lastTraded: {
+      lastTradedPrice: number;
+    } | null;
+  };
+  symbol: Symbol;
+}
 
-  const data = useBinanceData(symbol);
+const OrderBook: React.FC<OrderBookProps> = ({ data, symbol }) => {
+  const coin = SymbolMap[symbol].first.toUpperCase();
+  const quote = SymbolMap[symbol].second.toUpperCase();
+
   const [lastPriceDirection, setLastPriceDirection] = useState<string | null>(
     null,
   ); // 'up' or 'down'
@@ -36,7 +46,7 @@ const OrderBook = () => {
 
   return (
     <div className="w-full flex items-center lg:justify-center justify-start lg:flex-grow ">
-      <div className=" lg:w-[500px] sm:w-4/5 w-full bg-white rounded-lg lg:p-4 p-2 border border-1 border-grey">
+      <div className=" lg:w-[500px] sm:w-4/5 w-full bg-[#F8F8F8] rounded-lg lg:p-4 p-2 border border-1 border-grey">
         <table className="w-full table-fixed">
           <thead>
             <tr className="text-sm text-gray-600">
@@ -67,6 +77,7 @@ const OrderBook = () => {
             </tr>
 
             {/* Current Price Row */}
+
             <tr>
               <td colSpan={3} className="font-bold">
                 <span
@@ -76,13 +87,13 @@ const OrderBook = () => {
                       : "text-red-600"
                   }`}
                 >
-                  {lastTradedPrice?.toFixed(2)}
+                  {lastTraded && lastTradedPrice?.toFixed(2)}
                 </span>
                 <span className="mx-2">
-                  {lastPriceDirection === "up" ? "↑" : "↓"}
+                  {lastTraded && (lastPriceDirection === "up" ? "↑" : "↓")}
                 </span>
                 <span className="text-gray-600">
-                  ${lastTradedPrice?.toFixed(2)}
+                  {lastTraded && `${lastTradedPrice?.toFixed(2)}`}
                 </span>
               </td>
             </tr>

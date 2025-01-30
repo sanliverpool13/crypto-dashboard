@@ -11,14 +11,14 @@ export default class BinanceWebSocket {
   private wsTrade: WebSocket;
   private pair: string;
   private onOrderBookUpdate: (data: OrderBook) => void;
-  private onLastTrade: (data: LastTraded) => void;
+  private onLastTrade: (data: LastTraded | null) => void;
   private orderBook: BinanceOrderBook;
   private lastTradedPrice: number | null = null;
 
   constructor(
     symbol: string,
     onOrderBookUpdate: (data: OrderBook) => void,
-    onLastTrade: (data: LastTraded) => void,
+    onLastTrade: (data: LastTraded | null) => void,
   ) {
     this.wsDepth = new WebSocket(buildBinanceDepthWSStream(symbol, false));
     this.wsTrade = new WebSocket(buildBinanceTradeWSStream(symbol));
@@ -43,7 +43,7 @@ export default class BinanceWebSocket {
   }
 
   private initializeWebSocket() {
-    console.log("initializing websocket");
+    console.log("initializing trade websocket");
 
     this.wsTrade.onopen = () => {
       console.log("trade web socket opened");
@@ -71,6 +71,7 @@ export default class BinanceWebSocket {
   private onMessageTrade = (data: MessageEvent) => {
     const { type, data: message } = data;
     if (type === "message") {
+      console.log("trade message", message);
       const parsedData = JSON.parse(message);
       this.lastTradedPrice = parseFloat(parsedData.p);
 
@@ -141,7 +142,15 @@ export default class BinanceWebSocket {
   };
 
   close() {
+    this.resetState();
     this.wsDepth?.close();
+    this.wsTrade?.close();
+  }
+
+  resetState() {
+    // reset orderbook, and the last trading data
+    this.lastTradedPrice = null;
+    this.onLastTrade(null);
   }
 
   async fetchDepthSnapshot() {

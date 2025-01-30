@@ -7,8 +7,9 @@ export default class WebSocketManager {
   createBinanceWebSocket(
     symbol: string,
     onData: (data: OrderBook) => void,
-    onTrade: (data: LastTraded) => void,
+    onTrade: (data: LastTraded | null) => void,
   ) {
+    console.log("create binance web socket");
     if (this.binanceInstance) this.binanceInstance.close();
     this.binanceInstance = new BinanceWebSocket(symbol, onData, onTrade);
   }

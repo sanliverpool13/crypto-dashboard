@@ -1,38 +1,57 @@
-import { BTCUSDT, SymbolMap } from "../utils/constants";
+import { LastTraded, Symbol } from "../types/binance";
+import { SymbolMap } from "../utils/constants";
+import Dropdown from "./DropDown";
+import { Options as options } from "../utils/constants";
 
-const Description = () => {
-  const symbol = BTCUSDT;
+interface DescriptionProps {
+  symbol: Symbol;
+  lastTraded: LastTraded | null;
+  setSymbol: (symbol: Symbol) => void;
+}
+
+const Description: React.FC<DescriptionProps> = ({
+  symbol,
+  lastTraded,
+  setSymbol,
+}) => {
   const coin = SymbolMap[symbol].first.toUpperCase();
   const quote = SymbolMap[symbol].second.toUpperCase();
   return (
-    <div className="flex flex-col lg:gap-8 gap-4 lg:flex-grow">
-      <h1 className="text-2xl font-bold lg:mb-8">
-        Order Book - {`${coin}/${quote}`}
-      </h1>
+    <div className="flex flex-col lg:gap-24 gap-4 lg:flex-grow">
+      <section className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold lg:mb-8">
+          Order Book - {`${coin}/${quote}`}
+        </h1>
+        <Dropdown options={options} setSymbol={setSymbol} symbol={symbol} />
+        <div>
+          <h2 className="text-gray-500 font-semibold">Current Price</h2>
+          <p className="font-bold">
+            {lastTraded ? `$${lastTraded.lastTradedPrice.toFixed(2)}` : ""}
+          </p>
+        </div>
+      </section>
 
-      {/* <div>
-        <h2 className="text-gray-500 font-semibold">Current Price</h2>
-        <p className="font-bold">$36.69</p>
-      </div> */}
-      <div>
-        <p>
-          <span className="text-red-600">Red</span> Prices Are Sell Orders
-        </p>
-        <p>
-          <span className="text-green-600">Green</span> Prices Are Buy Orders
-        </p>
-      </div>
-      <div className="flex flex-col gap-2">
-        <h2 className="text-gray-500 font-semibold">Description</h2>
-        <p>
-          A simple order book that displays the buy and sell orders for a given
-          trading pair.
-        </p>
-        <p>
-          The last traded price (current price) is in the middle of the table.
-        </p>
-        <p>The order book is updated in real-time using the Binance API.</p>
-      </div>
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-gray-500 font-semibold">Description</h2>
+          <p>
+            A simple order book that displays the buy and sell orders for a
+            given trading pair.
+          </p>
+          <p>
+            The last traded price (current price) is in the middle of the table.
+          </p>
+          <p>The order book is updated in real-time using the Binance API.</p>
+        </div>
+        <div>
+          <p>
+            <span className="text-red-600">Red</span> Prices Are Sell Orders
+          </p>
+          <p>
+            <span className="text-green-600">Green</span> Prices Are Buy Orders
+          </p>
+        </div>
+      </section>
     </div>
   );
 };

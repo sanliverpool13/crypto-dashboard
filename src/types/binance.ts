@@ -25,3 +25,16 @@ export interface LastTraded {
   lastTradedPrice: number;
   lastTradedQuantity: number;
 }
+
+export enum Symbol {
+  BTCUSDT = "BTCUSDT",
+  ETHUSDT = "ETHUSDT",
+  BTCUSDC = "BTCUSDC",
+  AVAXUSDC = "AVAXUSDC",
+  AVAXUSDT = "AVAXUSDT",
+}
+
+export interface SymbolInfo {
+  first: string;
+  second: string;
+}
