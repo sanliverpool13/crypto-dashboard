@@ -5,13 +5,20 @@ import { LastTraded, OrderBook } from "../types/binance";
 const manager = new WebSocketManager();
 
 export function useBinanceData(pair: string) {
-  console.log("useBinanceData called");
   const [orderBook, setOrderBook] = useState<OrderBook | null>(null);
   const [lastTraded, setLastTraded] = useState<LastTraded | null>(null);
 
   useEffect(() => {
-    console.log("useEffect called");
-    manager.createBinanceWebSocket(pair, setOrderBook, setLastTraded);
+    if (!manager.getBinanceInstance()) {
+      manager.createBinanceWebSocket(pair, setOrderBook, setLastTraded);
+    }
+
+    if (
+      manager.getBinanceInstance() &&
+      manager.getBinanceInstance()?.isGeneralWSOpen()
+    ) {
+      manager.updateStreams(pair);
+    }
 
     return () => {
       manager.closeAll(); // Cleanup on unmount

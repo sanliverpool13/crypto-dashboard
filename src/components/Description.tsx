@@ -24,7 +24,9 @@ const Description: React.FC<DescriptionProps> = ({
         </h1>
         <Dropdown options={options} setSymbol={setSymbol} symbol={symbol} />
         <div>
-          <h2 className="text-gray-500 font-semibold">Current Price</h2>
+          <h2 className="text-gray-500 dark:text-[#AFAFAF] font-semibold">
+            Current Price
+          </h2>
           <p className="font-bold">
             {lastTraded ? `$${lastTraded.lastTradedPrice.toFixed(2)}` : ""}
           </p>
@@ -33,7 +35,9 @@ const Description: React.FC<DescriptionProps> = ({
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <h2 className="text-gray-500 font-semibold">Description</h2>
+          <h2 className="text-gray-500 dark:text-[#AFAFAF] font-semibold">
+            Description
+          </h2>
           <p>
             A simple order book that displays the buy and sell orders for a
             given trading pair.
@@ -45,10 +49,16 @@ const Description: React.FC<DescriptionProps> = ({
         </div>
         <div>
           <p>
-            <span className="text-red-600">Red</span> Prices Are Sell Orders
+            <span className="text-red-600">Red</span>{" "}
+            <span className="text-gray-500 dark:text-[#AFAFAF]">
+              Prices Are Sell Orders
+            </span>
           </p>
           <p>
-            <span className="text-green-600">Green</span> Prices Are Buy Orders
+            <span className="text-green-600">Green</span>{" "}
+            <span className="text-gray-500 dark:text-[#AFAFAF]">
+              Prices Are Buy Orders
+            </span>
           </p>
         </div>
       </section>

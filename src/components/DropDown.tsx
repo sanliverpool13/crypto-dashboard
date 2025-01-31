@@ -41,10 +41,13 @@ const Dropdown: React.FC<DropdownProps> = ({ options, setSymbol, symbol }) => {
   };
 
   return (
-    <div ref={dropdownRef} className="relative inline-block w-[200px] max-w-sm">
+    <div
+      ref={dropdownRef}
+      className="relative inline-block w-[200px] max-w-sm dark:text-white"
+    >
       {/* Dropdown Trigger */}
       <button
-        className="w-full bg-[#f2f2f2]  border-2 border-black  text-gray-700 py-2 px-4 rounded shadow focus:outline-none  text-left"
+        className="w-full bg-[#f2f2f2] dark:bg-transparent  border-2 border-black dark:border-white    py-2 px-4 rounded shadow focus:outline-none  text-left"
         onClick={handleToggle}
       >
         {selectedOption}
@@ -54,7 +57,7 @@ const Dropdown: React.FC<DropdownProps> = ({ options, setSymbol, symbol }) => {
       {/* Dropdown Menu */}
       {isOpen && (
         <ul
-          className="absolute z-100 bg-[#f2f2f2] border-2 border-black  rounded shadow w-full mt-2"
+          className="absolute z-100 bg-[#f2f2f2] dark:bg-[#1B1B1B] border-2 border-black  rounded shadow w-full mt-2"
           onClick={(e) => e.stopPropagation()} // Prevent menu from closing when clicking inside
         >
           {options.map((option, index) => (

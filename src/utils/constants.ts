@@ -1,6 +1,8 @@
 import { Symbol, SymbolInfo } from "../types/binance";
 
 // URLs
+export const BINANCE_WS_RAW_URL =
+  "wss://stream.binance.com:9443/stream?streams=";
 export const BINANCE_WS_STREAM_URL = "wss://stream.binance.com:9443/ws";
 export const BINANCE_MULTIPLE_STREAM_URL =
   "wss://stream.binance.com:9443/stream?streams=";
@@ -34,3 +36,5 @@ export const Options = SymbolList.map((symbol) => ({
   value: symbol,
   label: `${SymbolMap[symbol].first.toUpperCase()}/${SymbolMap[symbol].second.toUpperCase()}`,
 }));
+
+export const themeOptions = ["light", "dark", "system"];

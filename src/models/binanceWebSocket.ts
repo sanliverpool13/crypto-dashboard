@@ -1,4 +1,5 @@
 import { LastTraded, OrderBook } from "../types/binance";
+import { BINANCE_WS_RAW_URL } from "../utils/constants";
 import {
   buildBinanceDepthApiUrl,
   buildBinanceDepthWSStream,
@@ -9,6 +10,8 @@ import BinanceOrderBook from "./binanceOrderBook";
 export default class BinanceWebSocket {
   private wsDepth: WebSocket;
   private wsTrade: WebSocket;
+  private generalWS: WebSocket;
+  private streams: Set<string>;
   private pair: string;
   private onOrderBookUpdate: (data: OrderBook) => void;
   private onLastTrade: (data: LastTraded | null) => void;
@@ -20,34 +23,153 @@ export default class BinanceWebSocket {
     onOrderBookUpdate: (data: OrderBook) => void,
     onLastTrade: (data: LastTraded | null) => void,
   ) {
-    this.wsDepth = new WebSocket(buildBinanceDepthWSStream(symbol, false));
-    this.wsTrade = new WebSocket(buildBinanceTradeWSStream(symbol));
-
+    this.generalWS = new WebSocket(BINANCE_WS_RAW_URL);
+    // this.wsDepth = new WebSocket(buildBinanceDepthWSStream(symbol, false));
+    // this.wsTrade = new WebSocket(buildBinanceTradeWSStream(symbol));
+    this.streams = new Set([
+      `${symbol.toLowerCase()}@depth`,
+      `${symbol.toLowerCase()}@trade`,
+    ]);
     this.onOrderBookUpdate = onOrderBookUpdate;
     this.onLastTrade = onLastTrade;
     this.pair = symbol;
     this.orderBook = new BinanceOrderBook();
-    this.initializeDepthWebSocket();
-    this.initializeWebSocket();
+    // this.initializeDepthWebSocket();
+    // this.initializeWebSocket();
+
+    this.initializeGeneralWebSocket();
+  }
+
+  public isGeneralWSOpen() {
+    return this.generalWS.readyState === WebSocket.OPEN;
+  }
+
+  private initializeGeneralWebSocket() {
+    this.generalWS.onopen = () => {
+      this.subscribeStreams([...this.streams]);
+      this.fetchDepthSnapshot();
+    };
+
+    this.generalWS.onmessage = (message: MessageEvent) => {
+      this.onMessageGeneral(message);
+    };
+
+    this.generalWS.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    this.generalWS.onerror = (error) => {
+      console.error("WebSocket error", error);
+    };
+  }
+
+  onMessageGeneral(message: MessageEvent) {
+    // console.log(`message ${message}`);
+    const { type, data } = message;
+    const dataParsed = JSON.parse(data);
+
+    const lowerCasePair = this.pair.toLowerCase();
+
+    switch (dataParsed.stream) {
+      case `${lowerCasePair}@depth`:
+        this.handleDepth(dataParsed.data);
+        return;
+      case `${lowerCasePair}@trade`:
+        this.lastTradedPrice = parseFloat(dataParsed.data.p);
+        this.onLastTrade({
+          lastTradedPrice: this.lastTradedPrice,
+          lastTradedQuantity: parseFloat(dataParsed.data.q),
+        });
+        return;
+      default:
+        return;
+    }
+  }
+
+  private handleDepth(data: any) {
+    // Order book not initialized or set
+    if (this.orderBook.lastUpdateId === 0) {
+      this.orderBook.addToBuffer(data);
+    } else {
+      // check if valid snapshot
+      // process the order event
+      const resultOfProcess = this.orderBook.processOrderEvent(data);
+      if (!resultOfProcess) {
+        this.orderBook.addToBuffer(data);
+        this.fetchDepthSnapshot();
+        return;
+      }
+    }
+
+    this.onOrderBookUpdate(this.filterOrderBook(this.orderBook.getOrderBook()));
+  }
+
+  // If only one stream then array of one
+  public subscribeStreams(streams: string[]) {
+    const lowerCasedSymbols = streams.map((stream) => stream.toLowerCase());
+    lowerCasedSymbols.forEach((stream) => this.streams.add(stream));
+    this.generalWS.send(
+      JSON.stringify({
+        method: "SUBSCRIBE",
+        params: streams,
+        id: Date.now(),
+      }),
+    );
+    console.log(`Subscribed to streams ${streams}`);
+  }
+
+  public unsubscribeStreams(streamsToRemove: string[]) {
+    const loweredCaseStreamsToRemove = streamsToRemove.map((s) =>
+      s.toLowerCase(),
+    );
+    const filteredStreams = new Set(
+      [...this.streams].filter(
+        (stream) => !loweredCaseStreamsToRemove.includes(stream),
+      ),
+    );
+
+    this.streams = filteredStreams;
+
+    this.generalWS.send(
+      JSON.stringify({
+        method: "UNSUBSCRIBE",
+        params: loweredCaseStreamsToRemove,
+        id: Date.now(),
+      }),
+    );
+    console.log(`streams were removed ${loweredCaseStreamsToRemove}`);
+  }
+
+  public updateSymbol(newPair: string) {
+    const oldStreams = [
+      `${this.pair.toLowerCase()}@depth`,
+      `${this.pair.toLowerCase()}@trade`,
+    ];
+    const newStreams = [
+      `${newPair.toLowerCase()}@depth`,
+      `${newPair.toLowerCase()}@trade`,
+    ];
+    this.pair = newPair.toLowerCase();
+
+    this.unsubscribeStreams(oldStreams);
+    this.subscribeStreams(newStreams);
+    this.resetOrderBook();
+  }
+
+  private resetOrderBook() {
+    this.orderBook.discardOrderBook();
+    this.fetchDepthSnapshot();
   }
 
   private initializeDepthWebSocket() {
-    console.log("initializing websocket");
-
     this.wsDepth.onopen = () => {
-      console.log("web socket opened");
-
       this.wsDepth.onmessage = this.onMessage;
       this.fetchDepthSnapshot();
     };
   }
 
   private initializeWebSocket() {
-    console.log("initializing trade websocket");
-
     this.wsTrade.onopen = () => {
-      console.log("trade web socket opened");
-
       this.wsTrade.onmessage = this.onMessageTrade;
     };
   }
@@ -71,7 +193,6 @@ export default class BinanceWebSocket {
   private onMessageTrade = (data: MessageEvent) => {
     const { type, data: message } = data;
     if (type === "message") {
-      console.log("trade message", message);
       const parsedData = JSON.parse(message);
       this.lastTradedPrice = parseFloat(parsedData.p);
 
@@ -79,40 +200,8 @@ export default class BinanceWebSocket {
         lastTradedPrice: this.lastTradedPrice,
         lastTradedQuantity: parseFloat(parsedData.q),
       });
-      // switch (parsedData.stream) {
-      //   case `${this.pair.toLowerCase()}@trade`:
-      //     console.log("trade");
-      //     this.lastTradedPrice = parseFloat(parsedData.data.p);
-      //     break;
-      //   case `${this.pair.toLowerCase()}@depth`:
-      //     this.handleDepthUpdate(parsedData.data);
-      //     break;
-      //   default:
-      //     break;
-      // }
-      // this.lastTradedPrice = parseFloat(parsedData.p);
     }
   };
-
-  // private handleDepthUpdate = (data: any) => {
-  //   if (this.orderBook.lastUpdateId === 0) {
-  //     console.log("order book not initialized");
-  //     this.orderBook.addToBuffer(data);
-  //   } else {
-  //     console.log("order book initialized");
-  //     // check if valid snapshot
-  //     // process the order event
-  //     const resultOfProcess = this.orderBook.processOrderEvent(data);
-  //     if (!resultOfProcess) {
-  //       console.log("processed order event error");
-  //       this.orderBook.addToBuffer(data);
-  //       this.fetchDepthSnapshot();
-  //       return;
-  //     }
-  //   }
-
-  //   this.onOrderBookUpdate(this.filterOrderBook(this.orderBook.getOrderBook()));
-  // };
 
   private onMessage = (data: MessageEvent) => {
     const { type, data: message } = data;
@@ -122,15 +211,12 @@ export default class BinanceWebSocket {
     if (type === "message") {
       // Order book not initialized or set
       if (this.orderBook.lastUpdateId === 0) {
-        console.log("order book not initialized");
         this.orderBook.addToBuffer(parsedData);
       } else {
-        console.log("order book initialized");
         // check if valid snapshot
         // process the order event
         const resultOfProcess = this.orderBook.processOrderEvent(parsedData);
         if (!resultOfProcess) {
-          console.log("processed order event error");
           this.orderBook.addToBuffer(parsedData);
           this.fetchDepthSnapshot();
           return;
@@ -154,7 +240,6 @@ export default class BinanceWebSocket {
   }
 
   async fetchDepthSnapshot() {
-    console.log("fetching depth snapshot");
     const apiUrl = buildBinanceDepthApiUrl(this.pair, "5000");
     try {
       const response = await fetch(apiUrl);
@@ -162,10 +247,8 @@ export default class BinanceWebSocket {
         throw new Error("Failed to fetch depth snapshot");
       }
       const snapshot = await response.json();
-      console.log("snapshot", snapshot);
       // check if valid snapshot
       if (!this.orderBook.isSnapshotValid(snapshot.lastUpdateId)) {
-        console.log("snapshot is not valid");
         // trigger new snapshot
         this.fetchDepthSnapshot();
         return;
@@ -176,12 +259,9 @@ export default class BinanceWebSocket {
       // set snapshot
       this.orderBook.setOrderBook(snapshot);
 
-      console.log("order events accumulated", this.orderBook.orderEventsBuffer);
-
       for (const event of this.orderBook.orderEventsBuffer) {
         const resultOfProcess = this.orderBook.processOrderEvent(event);
         if (!resultOfProcess) {
-          console.log("processed order event error");
           this.fetchDepthSnapshot();
           return;
         }
@@ -191,7 +271,6 @@ export default class BinanceWebSocket {
       this.orderBook.orderEventsBuffer = [];
 
       // set data
-      console.log("setting data after snapshot");
       this.onOrderBookUpdate(
         this.filterOrderBook(this.orderBook.getOrderBook()),
       );

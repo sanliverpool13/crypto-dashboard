@@ -38,3 +38,9 @@ export interface SymbolInfo {
   first: string;
   second: string;
 }
+
+export enum Theme {
+  dark = "dark",
+  light = "light",
+  system = "system",
+}

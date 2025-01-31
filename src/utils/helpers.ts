@@ -1,3 +1,4 @@
+import { Theme } from "../types/binance";
 import {
   BINANCE_API_URL,
   BINANCE_MULTIPLE_STREAM_URL,
@@ -25,4 +26,10 @@ export const buildBinanceDepthApiUrl = (symbol: string, limit: string) => {
 
 export const builBinanceDepthAndTradeStream = (symbol: string) => {
   return `${BINANCE_MULTIPLE_STREAM_URL}${symbol.toLowerCase()}@depth/${symbol.toLocaleLowerCase()}@trade`;
+};
+
+export const getTheme = () => {
+  return "theme" in localStorage
+    ? (localStorage.getItem("theme") as Theme)
+    : Theme.system;
 };

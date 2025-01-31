@@ -6,7 +6,7 @@ const Footer = () => {
           Made by{" "}
           <a
             href="https://www.sanjarjelet.com"
-            className="underline text-blue-700"
+            className="underline text-blue-700 dark:text-[#AFAFAF]"
             target="_blank"
           >
             {" "}

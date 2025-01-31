@@ -45,11 +45,11 @@ const OrderBook: React.FC<OrderBookProps> = ({ data, symbol }) => {
   }, [lastTradedPrice]);
 
   return (
-    <div className="w-full flex items-center lg:justify-center justify-start lg:flex-grow ">
-      <div className=" lg:w-[500px] sm:w-4/5 w-full bg-[#F8F8F8] rounded-lg lg:p-4 p-2 border border-1 border-grey">
+    <div className="w-full flex items-center lg:justify-end justify-start lg:flex-grow ">
+      <div className=" lg:w-[500px] sm:w-4/5 w-full bg-[#F8F8F8] dark:bg-[#393939] rounded-lg lg:p-4 p-2 border border-1 border-grey dark:border-[#AFAFAF]">
         <table className="w-full table-fixed">
           <thead>
-            <tr className="text-sm text-gray-600">
+            <tr className="text-sm text-gray-600 dark:text-[#AFAFAF]">
               <th className="text-left pb-4">Price ({quote})</th>
               <th className="text-right pb-4">Amount ({coin})</th>
               <th className="text-right pb-4">Total ({quote})</th>
@@ -59,7 +59,7 @@ const OrderBook: React.FC<OrderBookProps> = ({ data, symbol }) => {
             {asks &&
               asks.map((order: PriceLevel, index: number) => (
                 <tr key={index} className="mt-4">
-                  <td className="text-red-600 text-left">
+                  <td className="text-red-600 dark:text-[#FF4F4F] text-left">
                     {parseFloat(order[0]).toFixed(2)}
                   </td>
                   <td className="text-right">
@@ -83,8 +83,8 @@ const OrderBook: React.FC<OrderBookProps> = ({ data, symbol }) => {
                 <span
                   className={`text-xl ${
                     lastPriceDirection === "up"
-                      ? "text-green-600"
-                      : "text-red-600"
+                      ? "text-green-600 dark:text-[#5EC23B]"
+                      : "text-red-600 dark:text-[#FF4F4F]"
                   }`}
                 >
                   {lastTraded && lastTradedPrice?.toFixed(2)}
@@ -92,7 +92,7 @@ const OrderBook: React.FC<OrderBookProps> = ({ data, symbol }) => {
                 <span className="mx-2">
                   {lastTraded && (lastPriceDirection === "up" ? "↑" : "↓")}
                 </span>
-                <span className="text-gray-600">
+                <span className="text-gray-600 dark:text-[#AFAFAF]">
                   {lastTraded && `${lastTradedPrice?.toFixed(2)}`}
                 </span>
               </td>
@@ -106,7 +106,7 @@ const OrderBook: React.FC<OrderBookProps> = ({ data, symbol }) => {
             {bids &&
               bids.map((order: PriceLevel, index: number) => (
                 <tr key={index}>
-                  <td className="text-green-600 text-left">
+                  <td className="text-green-600 dark:text-[#5EC23B] text-left">
                     {parseFloat(order[0]).toFixed(2)}
                   </td>
                   <td className="text-right">
