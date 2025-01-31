@@ -1,15 +1,11 @@
 import { LastTraded, OrderBook } from "../types/binance";
 import { BINANCE_WS_RAW_URL } from "../utils/constants";
-import {
-  buildBinanceDepthApiUrl,
-  buildBinanceDepthWSStream,
-  buildBinanceTradeWSStream,
-} from "../utils/helpers";
+import { buildBinanceDepthApiUrl } from "../utils/helpers";
 import BinanceOrderBook from "./binanceOrderBook";
 
 export default class BinanceWebSocket {
-  private wsDepth: WebSocket;
-  private wsTrade: WebSocket;
+  // private wsDepth: WebSocket;
+  // private wsTrade: WebSocket;
   private generalWS: WebSocket;
   private streams: Set<string>;
   private pair: string;
@@ -65,7 +61,7 @@ export default class BinanceWebSocket {
 
   onMessageGeneral(message: MessageEvent) {
     // console.log(`message ${message}`);
-    const { type, data } = message;
+    const { data } = message;
     const dataParsed = JSON.parse(data);
 
     const lowerCasePair = this.pair.toLowerCase();
@@ -161,18 +157,18 @@ export default class BinanceWebSocket {
     this.fetchDepthSnapshot();
   }
 
-  private initializeDepthWebSocket() {
-    this.wsDepth.onopen = () => {
-      this.wsDepth.onmessage = this.onMessage;
-      this.fetchDepthSnapshot();
-    };
-  }
+  // private initializeDepthWebSocket() {
+  //   this.wsDepth.onopen = () => {
+  //     this.wsDepth.onmessage = this.onMessage;
+  //     this.fetchDepthSnapshot();
+  //   };
+  // }
 
-  private initializeWebSocket() {
-    this.wsTrade.onopen = () => {
-      this.wsTrade.onmessage = this.onMessageTrade;
-    };
-  }
+  // private initializeWebSocket() {
+  //   this.wsTrade.onopen = () => {
+  //     this.wsTrade.onmessage = this.onMessageTrade;
+  //   };
+  // }
 
   private filterOrderBook(orderBook: OrderBook) {
     const { asks, bids } = orderBook;
@@ -190,47 +186,48 @@ export default class BinanceWebSocket {
     return { bids: sortedBids.slice(0, 10), asks: sortedAsks.slice(0, 10) };
   }
 
-  private onMessageTrade = (data: MessageEvent) => {
-    const { type, data: message } = data;
-    if (type === "message") {
-      const parsedData = JSON.parse(message);
-      this.lastTradedPrice = parseFloat(parsedData.p);
+  // private onMessageTrade = (data: MessageEvent) => {
+  //   const { type, data: message } = data;
+  //   if (type === "message") {
+  //     const parsedData = JSON.parse(message);
+  //     this.lastTradedPrice = parseFloat(parsedData.p);
 
-      this.onLastTrade({
-        lastTradedPrice: this.lastTradedPrice,
-        lastTradedQuantity: parseFloat(parsedData.q),
-      });
-    }
-  };
+  //     this.onLastTrade({
+  //       lastTradedPrice: this.lastTradedPrice,
+  //       lastTradedQuantity: parseFloat(parsedData.q),
+  //     });
+  //   }
+  // };
 
-  private onMessage = (data: MessageEvent) => {
-    const { type, data: message } = data;
+  // private onMessage = (data: MessageEvent) => {
+  //   const { type, data: message } = data;
 
-    const parsedData = JSON.parse(message);
+  //   const parsedData = JSON.parse(message);
 
-    if (type === "message") {
-      // Order book not initialized or set
-      if (this.orderBook.lastUpdateId === 0) {
-        this.orderBook.addToBuffer(parsedData);
-      } else {
-        // check if valid snapshot
-        // process the order event
-        const resultOfProcess = this.orderBook.processOrderEvent(parsedData);
-        if (!resultOfProcess) {
-          this.orderBook.addToBuffer(parsedData);
-          this.fetchDepthSnapshot();
-          return;
-        }
-      }
-    }
+  //   if (type === "message") {
+  //     // Order book not initialized or set
+  //     if (this.orderBook.lastUpdateId === 0) {
+  //       this.orderBook.addToBuffer(parsedData);
+  //     } else {
+  //       // check if valid snapshot
+  //       // process the order event
+  //       const resultOfProcess = this.orderBook.processOrderEvent(parsedData);
+  //       if (!resultOfProcess) {
+  //         this.orderBook.addToBuffer(parsedData);
+  //         this.fetchDepthSnapshot();
+  //         return;
+  //       }
+  //     }
+  //   }
 
-    this.onOrderBookUpdate(this.filterOrderBook(this.orderBook.getOrderBook()));
-  };
+  //   this.onOrderBookUpdate(this.filterOrderBook(this.orderBook.getOrderBook()));
+  // };
 
   close() {
     this.resetState();
-    this.wsDepth?.close();
-    this.wsTrade?.close();
+    this.generalWS?.close();
+    // this.wsDepth?.close();
+    // this.wsTrade?.close();
   }
 
   resetState() {

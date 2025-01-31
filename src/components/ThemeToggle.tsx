@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Theme } from "../types/binance";
 import { getTheme } from "../utils/helpers";
 import { themeOptions } from "../utils/constants";
