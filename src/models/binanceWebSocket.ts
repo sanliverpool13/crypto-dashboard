@@ -1,11 +1,16 @@
-import { BinanceOrderEvent, LastTraded, OrderBook } from "../types/binance";
+import {
+  BinanceOrderEvent,
+  LastTraded,
+  OrderBook,
+  Symbol,
+} from "../types/binance";
 import { BINANCE_WS_RAW_URL } from "../utils/constants";
 import { buildBinanceDepthApiUrl } from "../utils/helpers";
 import BinanceOrderBook from "./binanceOrderBook";
 
 export default class BinanceWebSocket {
   private generalWS: WebSocket;
-  private streams: Set<string>;
+  // private streams: Set<string>;
   private pair: string;
   private onOrderBookUpdate: (data: OrderBook) => void;
   private onLastTrade: (data: LastTraded | null) => void;
@@ -13,19 +18,18 @@ export default class BinanceWebSocket {
   private lastTradedPrice: number | null = null;
 
   constructor(
-    symbol: string,
     onOrderBookUpdate: (data: OrderBook) => void,
     onLastTrade: (data: LastTraded | null) => void,
   ) {
     this.generalWS = new WebSocket(BINANCE_WS_RAW_URL);
-
-    this.streams = new Set([
-      `${symbol.toLowerCase()}@depth`,
-      `${symbol.toLowerCase()}@trade`,
-    ]);
+    this.pair = Symbol.BTCUSDT;
+    // this.streams = new Set([
+    //   `${symbol.toLowerCase()}@depth`,
+    //   `${symbol.toLowerCase()}@trade`,
+    // ]);
     this.onOrderBookUpdate = onOrderBookUpdate;
     this.onLastTrade = onLastTrade;
-    this.pair = symbol;
+    // this.pair = symbol;
     this.orderBook = new BinanceOrderBook();
 
     this.initializeGeneralWebSocket();
@@ -38,7 +42,7 @@ export default class BinanceWebSocket {
   private initializeGeneralWebSocket() {
     this.generalWS.onopen = () => {
       console.log("web socket open");
-      this.subscribeStreams([...this.streams]);
+      this.subscribeStreamsWithPair(this.pair);
       this.fetchDepthSnapshot();
     };
 
@@ -59,6 +63,8 @@ export default class BinanceWebSocket {
     // console.log(`message ${message}`);
     const { data } = message;
     const dataParsed = JSON.parse(data);
+
+    console.log("on message general");
 
     const lowerCasePair = this.pair.toLowerCase();
 
@@ -97,30 +103,81 @@ export default class BinanceWebSocket {
   }
 
   // If only one stream then array of one
-  public subscribeStreams(streams: string[]) {
-    const lowerCasedSymbols = streams.map((stream) => stream.toLowerCase());
-    lowerCasedSymbols.forEach((stream) => this.streams.add(stream));
+  // public subscribeStreams(streams: string[]) {
+  //   const lowerCasedSymbols = streams.map((stream) => stream.toLowerCase());
+  //   lowerCasedSymbols.forEach((stream) => this.streams.add(stream));
+  //   this.generalWS.send(
+  //     JSON.stringify({
+  //       method: "SUBSCRIBE",
+  //       params: streams,
+  //       id: Date.now(),
+  //     }),
+  //   );
+  //   console.log(`Subscribed to streams ${streams}`);
+  // }
+
+  public subscribeToNewPair(symbol: string) {
+    this.unsubscribeStreamsWithPair(this.pair);
+    this.subscribeStreamsWithPair(symbol);
+    this.pair = symbol;
+    this.lastTradedPrice = null;
+    this.onLastTrade(null);
+    this.orderBook.discardOrderBook();
+    this.fetchDepthSnapshot();
+  }
+
+  public getStreamsFromPair(symbol: string) {
+    return [`${symbol}@depth`, `${symbol}@trade`];
+  }
+
+  public subscribeStreamsWithPair(symbol: string) {
+    const newStreams = this.getStreamsFromPair(symbol);
+    const lowerCasedSymbols = newStreams.map((s) => s.toLowerCase());
+    // lowerCasedSymbols.forEach((stream) => this.streams.add(stream));
     this.generalWS.send(
       JSON.stringify({
         method: "SUBSCRIBE",
-        params: streams,
+        params: lowerCasedSymbols,
         id: Date.now(),
       }),
     );
-    console.log(`Subscribed to streams ${streams}`);
+    console.log(`Subscribed to streams ${newStreams}`);
   }
 
-  public unsubscribeStreams(streamsToRemove: string[]) {
+  // public unsubscribeStreams(streamsToRemove: string[]) {
+  //   const loweredCaseStreamsToRemove = streamsToRemove.map((s) =>
+  //     s.toLowerCase(),
+  //   );
+  //   const filteredStreams = new Set(
+  //     [...this.streams].filter(
+  //       (stream) => !loweredCaseStreamsToRemove.includes(stream),
+  //     ),
+  //   );
+
+  //   this.streams = filteredStreams;
+
+  //   this.generalWS.send(
+  //     JSON.stringify({
+  //       method: "UNSUBSCRIBE",
+  //       params: loweredCaseStreamsToRemove,
+  //       id: Date.now(),
+  //     }),
+  //   );
+  //   console.log(`streams were removed ${loweredCaseStreamsToRemove}`);
+  // }
+
+  public unsubscribeStreamsWithPair(symbol: string) {
+    const streamsToRemove = this.getStreamsFromPair(symbol);
     const loweredCaseStreamsToRemove = streamsToRemove.map((s) =>
       s.toLowerCase(),
     );
-    const filteredStreams = new Set(
-      [...this.streams].filter(
-        (stream) => !loweredCaseStreamsToRemove.includes(stream),
-      ),
-    );
+    // const filteredStreams = new Set(
+    //   [...this.streams].filter(
+    //     (stream) => !loweredCaseStreamsToRemove.includes(stream),
+    //   ),
+    // );
 
-    this.streams = filteredStreams;
+    // this.streams = filteredStreams;
 
     this.generalWS.send(
       JSON.stringify({
@@ -132,35 +189,35 @@ export default class BinanceWebSocket {
     console.log(`streams were removed ${loweredCaseStreamsToRemove}`);
   }
 
-  public updateSymbol(newPair: string) {
-    const oldStreams = [
-      `${this.pair.toLowerCase()}@depth`,
-      `${this.pair.toLowerCase()}@trade`,
-    ];
-    const newStreams = [
-      `${newPair.toLowerCase()}@depth`,
-      `${newPair.toLowerCase()}@trade`,
-    ];
-    this.pair = newPair.toLowerCase();
+  // public updateSymbol(newPair: string) {
+  //   const oldStreams = [
+  //     `${this.pair.toLowerCase()}@depth`,
+  //     `${this.pair.toLowerCase()}@trade`,
+  //   ];
+  //   const newStreams = [
+  //     `${newPair.toLowerCase()}@depth`,
+  //     `${newPair.toLowerCase()}@trade`,
+  //   ];
+  //   this.pair = newPair.toLowerCase();
 
-    this.unsubscribeStreams(oldStreams);
-    this.subscribeStreams(newStreams);
-    this.resetOrderBook();
-  }
+  //   this.unsubscribeStreams(oldStreams);
+  //   this.subscribeStreams(newStreams);
+  //   this.resetOrderBook();
+  // }
 
-  public removeStreams() {
-    if (!this.isGeneralWSOpen()) return;
-    this.unsubscribeStreams([...this.streams]);
-  }
+  // public removeStreams() {
+  //   if (!this.isGeneralWSOpen()) return;
+  //   this.unsubscribeStreams([...this.streams]);
+  // }
 
-  public getStreams() {
-    return [...this.streams];
-  }
+  // public getStreams() {
+  //   return [...this.streams];
+  // }
 
-  private resetOrderBook() {
-    this.orderBook.discardOrderBook();
-    this.fetchDepthSnapshot();
-  }
+  // private resetOrderBook() {
+  //   this.orderBook.discardOrderBook();
+  //   this.fetchDepthSnapshot();
+  // }
 
   // private initializeDepthWebSocket() {
   //   this.wsDepth.onopen = () => {

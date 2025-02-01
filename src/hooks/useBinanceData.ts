@@ -1,39 +1,34 @@
 import { useEffect, useState } from "react";
-import WebSocketManager from "../services/webSocketManager";
 import { LastTraded, OrderBook } from "../types/binance";
-
-const manager = new WebSocketManager();
+import useBinanceWebSocket from "./useBinanceWebSocket";
 
 export function useBinanceData(pair: string) {
   const [orderBook, setOrderBook] = useState<OrderBook | null>(null);
   const [lastTraded, setLastTraded] = useState<LastTraded | null>(null);
 
-  useEffect(() => {
-    if (!manager.getBinanceInstance()) {
-      manager.createBinanceWebSocket(pair, setOrderBook, setLastTraded);
-    }
-
-    return () => {
-      manager.removeBinanceWebSocketInstance();
-    };
-  }, [pair]);
+  const binanceInstance = useBinanceWebSocket(setOrderBook, setLastTraded);
 
   // useEffect(() => {
-  //   const binanceInstance = manager.getBinanceInstance();
-  //   console.log("binance instance", binanceInstance);
-
-  //   if (!binanceInstance) {
-  //     console.log("create binance instance and web socket");
+  //   if (!manager.getBinanceInstance()) {
   //     manager.createBinanceWebSocket(pair, setOrderBook, setLastTraded);
-  //   } else {
-  //     console.log("update streams");
-  //     manager.updateStreams(pair);
   //   }
 
   //   return () => {
-  //     manager.removeStream();
+  //     manager.removeBinanceWebSocketInstance();
   //   };
   // }, [pair]);
+
+  useEffect(() => {
+    if (!binanceInstance || !binanceInstance.isGeneralWSOpen()) return;
+
+    // Set Up
+    binanceInstance.subscribeToNewPair(pair);
+
+    // Clean Up
+    return () => {
+      binanceInstance.unsubscribeStreamsWithPair(pair);
+    };
+  }, [pair, binanceInstance]);
 
   return { orderBook, lastTraded };
 }
