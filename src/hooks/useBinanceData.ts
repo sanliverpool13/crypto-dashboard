@@ -13,17 +13,27 @@ export function useBinanceData(pair: string) {
       manager.createBinanceWebSocket(pair, setOrderBook, setLastTraded);
     }
 
-    if (
-      manager.getBinanceInstance() &&
-      manager.getBinanceInstance()?.isGeneralWSOpen()
-    ) {
-      manager.updateStreams(pair);
-    }
-
     return () => {
-      manager.closeAll(); // Cleanup on unmount
+      manager.removeBinanceWebSocketInstance();
     };
   }, [pair]);
+
+  // useEffect(() => {
+  //   const binanceInstance = manager.getBinanceInstance();
+  //   console.log("binance instance", binanceInstance);
+
+  //   if (!binanceInstance) {
+  //     console.log("create binance instance and web socket");
+  //     manager.createBinanceWebSocket(pair, setOrderBook, setLastTraded);
+  //   } else {
+  //     console.log("update streams");
+  //     manager.updateStreams(pair);
+  //   }
+
+  //   return () => {
+  //     manager.removeStream();
+  //   };
+  // }, [pair]);
 
   return { orderBook, lastTraded };
 }

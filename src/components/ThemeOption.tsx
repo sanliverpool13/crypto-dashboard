@@ -1,5 +1,6 @@
 import React from "react";
 import { Theme } from "../types/binance";
+import { capitalizeString } from "../utils/helpers";
 
 interface ThemeOption {
   type: string;
@@ -17,7 +18,7 @@ const ThemeOption: React.FC<ThemeOption> = ({
       className={`${type === theme ? (theme === Theme.light ? `bg-[#F8F8F8] dark:bg-transparent` : "dark:bg-[#1C1C1C]") : ""}   py-1 px-4 rounded-xl`}
       onClick={() => handleThemeChange(type)}
     >
-      {type}
+      {capitalizeString(type)}
     </button>
   );
 };

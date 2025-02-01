@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Symbol } from "../types/binance";
 
 interface DropdownProps {
-  options: { label: string; value: Symbol }[];
+  options: Map<Symbol, { value: Symbol; label: string }>;
   symbol: Symbol;
   setSymbol: (symbol: Symbol) => void;
 }
@@ -47,10 +47,10 @@ const Dropdown: React.FC<DropdownProps> = ({ options, setSymbol, symbol }) => {
     >
       {/* Dropdown Trigger */}
       <button
-        className="w-full bg-[#f2f2f2] dark:bg-transparent  border-2 border-black dark:border-white    py-2 px-4 rounded shadow focus:outline-none  text-left"
+        className="w-full bg-[#f2f2f2] dark:bg-transparent  border-2 border-black dark:border-white py-2 px-4 rounded shadow focus:outline-none  text-left"
         onClick={handleToggle}
       >
-        {selectedOption}
+        {options.get(selectedOption)?.label}
         <span className="float-right">▾</span>
       </button>
 
@@ -60,7 +60,7 @@ const Dropdown: React.FC<DropdownProps> = ({ options, setSymbol, symbol }) => {
           className="absolute z-100 bg-[#f2f2f2] dark:bg-[#1B1B1B] border-2 border-black  rounded shadow w-full mt-2"
           onClick={(e) => e.stopPropagation()} // Prevent menu from closing when clicking inside
         >
-          {options.map((option, index) => (
+          {Array.from(options.values()).map((option, index) => (
             <li
               key={index}
               className="hover:bg-[#000000] hover:bg-opacity-10 cursor-pointer px-4 py-2"

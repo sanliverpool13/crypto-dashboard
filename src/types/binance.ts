@@ -32,6 +32,7 @@ export enum Symbol {
   BTCUSDC = "BTCUSDC",
   AVAXUSDC = "AVAXUSDC",
   AVAXUSDT = "AVAXUSDT",
+  SOLUSDT = "SOLUSDT",
 }
 
 export interface SymbolInfo {

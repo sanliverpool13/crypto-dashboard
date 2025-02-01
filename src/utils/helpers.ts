@@ -1,4 +1,4 @@
-import { Theme } from "../types/binance";
+import { Theme, Symbol } from "../types/binance";
 import {
   BINANCE_API_URL,
   BINANCE_MULTIPLE_STREAM_URL,
@@ -32,4 +32,20 @@ export const getTheme = () => {
   return "theme" in localStorage
     ? (localStorage.getItem("theme") as Theme)
     : Theme.system;
+};
+
+export const capitalizeString = (str: string) => {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+export const getSymbolOptionsMap = (
+  options: {
+    value: Symbol;
+    label: string;
+  }[],
+) => {
+  const OptionsMap = new Map<Symbol, { value: Symbol; label: string }>();
+  options.forEach((option) => OptionsMap.set(option.value, option));
+  return OptionsMap;
 };

@@ -89,11 +89,17 @@ const OrderBook: React.FC<OrderBookProps> = ({ data, symbol }) => {
                 >
                   {lastTraded && lastTradedPrice?.toFixed(2)}
                 </span>
-                <span className="mx-2">
+                <span
+                  className={`mr-2 ${
+                    lastPriceDirection === "up"
+                      ? "text-green-600 dark:text-[#5EC23B]"
+                      : "text-red-600 dark:text-[#FF4F4F]"
+                  }`}
+                >
                   {lastTraded && (lastPriceDirection === "up" ? "↑" : "↓")}
                 </span>
                 <span className="text-gray-600 dark:text-[#AFAFAF]">
-                  {lastTraded && `${lastTradedPrice?.toFixed(2)}`}
+                  {lastTraded && `$${lastTradedPrice?.toFixed(2)}`}
                 </span>
               </td>
             </tr>

@@ -18,6 +18,15 @@ export default class WebSocketManager {
     this.binanceInstance?.updateSymbol(symbol);
   }
 
+  removeBinanceWebSocketInstance() {
+    this.binanceInstance?.close();
+    this.binanceInstance = null;
+  }
+
+  removeStream() {
+    this.binanceInstance?.removeStreams();
+  }
+
   closeAll() {
     this.binanceInstance?.close();
   }

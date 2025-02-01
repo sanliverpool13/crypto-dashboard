@@ -1,11 +1,9 @@
-import { LastTraded, OrderBook } from "../types/binance";
+import { BinanceOrderEvent, LastTraded, OrderBook } from "../types/binance";
 import { BINANCE_WS_RAW_URL } from "../utils/constants";
 import { buildBinanceDepthApiUrl } from "../utils/helpers";
 import BinanceOrderBook from "./binanceOrderBook";
 
 export default class BinanceWebSocket {
-  // private wsDepth: WebSocket;
-  // private wsTrade: WebSocket;
   private generalWS: WebSocket;
   private streams: Set<string>;
   private pair: string;
@@ -20,8 +18,7 @@ export default class BinanceWebSocket {
     onLastTrade: (data: LastTraded | null) => void,
   ) {
     this.generalWS = new WebSocket(BINANCE_WS_RAW_URL);
-    // this.wsDepth = new WebSocket(buildBinanceDepthWSStream(symbol, false));
-    // this.wsTrade = new WebSocket(buildBinanceTradeWSStream(symbol));
+
     this.streams = new Set([
       `${symbol.toLowerCase()}@depth`,
       `${symbol.toLowerCase()}@trade`,
@@ -30,8 +27,6 @@ export default class BinanceWebSocket {
     this.onLastTrade = onLastTrade;
     this.pair = symbol;
     this.orderBook = new BinanceOrderBook();
-    // this.initializeDepthWebSocket();
-    // this.initializeWebSocket();
 
     this.initializeGeneralWebSocket();
   }
@@ -42,6 +37,7 @@ export default class BinanceWebSocket {
 
   private initializeGeneralWebSocket() {
     this.generalWS.onopen = () => {
+      console.log("web socket open");
       this.subscribeStreams([...this.streams]);
       this.fetchDepthSnapshot();
     };
@@ -68,7 +64,7 @@ export default class BinanceWebSocket {
 
     switch (dataParsed.stream) {
       case `${lowerCasePair}@depth`:
-        this.handleDepth(dataParsed.data);
+        this.handleDepth(dataParsed.data as BinanceOrderEvent);
         return;
       case `${lowerCasePair}@trade`:
         this.lastTradedPrice = parseFloat(dataParsed.data.p);
@@ -82,7 +78,7 @@ export default class BinanceWebSocket {
     }
   }
 
-  private handleDepth(data: any) {
+  private handleDepth(data: BinanceOrderEvent) {
     // Order book not initialized or set
     if (this.orderBook.lastUpdateId === 0) {
       this.orderBook.addToBuffer(data);
@@ -150,6 +146,15 @@ export default class BinanceWebSocket {
     this.unsubscribeStreams(oldStreams);
     this.subscribeStreams(newStreams);
     this.resetOrderBook();
+  }
+
+  public removeStreams() {
+    if (!this.isGeneralWSOpen()) return;
+    this.unsubscribeStreams([...this.streams]);
+  }
+
+  public getStreams() {
+    return [...this.streams];
   }
 
   private resetOrderBook() {

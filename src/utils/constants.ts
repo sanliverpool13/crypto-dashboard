@@ -20,8 +20,9 @@ export const SymbolMap: Record<Symbol, SymbolInfo> = {
   [Symbol.BTCUSDT]: { first: "btc", second: "usdt" },
   [Symbol.ETHUSDT]: { first: "eth", second: "usdt" },
   [Symbol.AVAXUSDT]: { first: "avax", second: "usdt" },
-  [Symbol.BTCUSDC]: { first: "btc", second: "usdd" },
+  [Symbol.BTCUSDC]: { first: "btc", second: "usdt" },
   [Symbol.AVAXUSDC]: { first: "avax", second: "usdc" },
+  [Symbol.SOLUSDT]: { first: "sol", second: "usdt" },
 };
 
 export const SymbolList = [
@@ -30,6 +31,7 @@ export const SymbolList = [
   Symbol.AVAXUSDT,
   Symbol.BTCUSDC,
   Symbol.AVAXUSDC,
+  Symbol.SOLUSDT,
 ];
 
 export const Options = SymbolList.map((symbol) => ({

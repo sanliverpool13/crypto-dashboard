@@ -2,12 +2,15 @@ import { LastTraded, Symbol } from "../types/binance";
 import { SymbolMap } from "../utils/constants";
 import Dropdown from "./DropDown";
 import { Options as options } from "../utils/constants";
+import { getSymbolOptionsMap } from "../utils/helpers";
 
 interface DescriptionProps {
   symbol: Symbol;
   lastTraded: LastTraded | null;
   setSymbol: (symbol: Symbol) => void;
 }
+
+const optionsMap = getSymbolOptionsMap(options);
 
 const Description: React.FC<DescriptionProps> = ({
   symbol,
@@ -22,7 +25,7 @@ const Description: React.FC<DescriptionProps> = ({
         <h1 className="text-2xl font-bold lg:mb-8">
           Order Book - {`${coin}/${quote}`}
         </h1>
-        <Dropdown options={options} setSymbol={setSymbol} symbol={symbol} />
+        <Dropdown options={optionsMap} setSymbol={setSymbol} symbol={symbol} />
         <div>
           <h2 className="text-gray-500 dark:text-[#AFAFAF] font-semibold">
             Current Price
